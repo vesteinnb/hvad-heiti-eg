@@ -368,7 +368,6 @@ export class AuthAPI {
       }
     })
     if (error) throw error;
-    // Do NOT create parent profile here; wait until after email confirmation and login
     return data;
   }
 
@@ -377,6 +376,19 @@ export class AuthAPI {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
+    })
+
+    if (error) throw error
+    return data
+  }
+
+  // Sign in with Google
+  static async signInWithGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
     })
 
     if (error) throw error
@@ -409,17 +421,24 @@ export class AuthAPI {
       .single()
 
     if (data) return data;
+    
     // If not found, create it now
+    const username = user.user_metadata?.full_name || 
+                    user.user_metadata?.username || 
+                    user.email?.split('@')[0] || 
+                    'User'
+    
     const { error: profileError, data: newProfile } = await supabase
       .from('parents')
       .insert({
         id: user.id,
-        username: user.user_metadata?.username || user.email,
-        first_name: user.user_metadata?.first_name || null,
-        last_name: user.user_metadata?.last_name || null
+        username: username,
+        first_name: user.user_metadata?.first_name || user.user_metadata?.full_name?.split(' ')[0] || null,
+        last_name: user.user_metadata?.last_name || user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || null
       })
       .select()
       .single();
+      
     if (profileError) {
       console.error('Failed to create parent profile:', profileError)
       return null;
