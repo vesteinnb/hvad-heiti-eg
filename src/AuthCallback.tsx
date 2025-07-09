@@ -10,7 +10,10 @@ const AuthCallback: React.FC = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the user after OAuth callback
+        // Wait a bit for the auth state to settle
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Get the current user
         const user = await AuthAPI.getCurrentUser();
         
         if (user) {
@@ -24,7 +27,7 @@ const AuthCallback: React.FC = () => {
             setError('Failed to create user profile');
           }
         } else {
-          setError('Authentication failed');
+          setError('Authentication failed - no user found');
         }
       } catch (err: any) {
         console.error('Auth callback error:', err);
@@ -56,8 +59,14 @@ const AuthCallback: React.FC = () => {
           <div className="text-xl font-heading text-neutral-700 mb-2">Authentication Error</div>
           <div className="text-neutral-600 mb-4">{error}</div>
           <button
+            onClick={() => navigate('/parent')}
+            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors mr-2"
+          >
+            Try Parent Dashboard
+          </button>
+          <button
             onClick={() => navigate('/')}
-            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
           >
             Go Home
           </button>
