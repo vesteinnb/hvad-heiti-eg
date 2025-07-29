@@ -98,6 +98,24 @@ const App: React.FC = () => {
     
     const trimmed = guess.trim();
     
+    // Check for empty guess
+    if (!trimmed) {
+      setFeedback('empty');
+      setPartialMatchFeedback('Please enter a guess before submitting!');
+      return;
+    }
+    
+    // Check for duplicate guess
+    const isDuplicate = previousGuesses.some(prevGuess => 
+      prevGuess.toLowerCase() === trimmed.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+      setFeedback('duplicate');
+      setPartialMatchFeedback('You already tried that name! Try something different.');
+      return;
+    }
+    
     // Use the new name guessing logic
     const nameResult = checkNameGuess(
       trimmed,
@@ -109,15 +127,19 @@ const App: React.FC = () => {
     try {
       const timeElapsed = Math.floor((Date.now() - (player.joined_at ? new Date(player.joined_at).getTime() : Date.now())) / 1000);
       
-      // Submit guess using hook
-      await submitGuess(
-        player.id,
-        game.id,
-        trimmed,
-        nameResult.isFullMatch,
-        timeElapsed,
-        player.clues_revealed
-      );
+      // Only submit guess if it's not a partial match (partial matches shouldn't count as incorrect)
+      const shouldSubmitGuess = nameResult.isFullMatch || !nameResult.isPartialMatch;
+      
+      if (shouldSubmitGuess) {
+        await submitGuess(
+          player.id,
+          game.id,
+          trimmed,
+          nameResult.isFullMatch,
+          timeElapsed,
+          player.clues_revealed
+        );
+      }
       
       // Check if user has now guessed all required parts (first name + middle name if it exists)
       const newGuessedParts = {
@@ -261,7 +283,7 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex flex-col items-center px-4 py-6 transition-all duration-200${showSuccessModal ? '' : ''}`} style={{paddingTop: 'env(safe-area-inset-top, 0px)'}}>
       <div className="w-full max-w-lg space-y-6">
-        <GameHeader />
+        <GameHeader description={game.description} />
         <div className="w-full flex justify-between items-center text-sm font-body bg-white/60 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/40">
           <div className="text-gray-700">Player: <span className="font-bold text-purple-700">{username}</span></div>
           <div className="text-gray-700">Game: <span className="font-mono font-bold text-purple-700">{game.game_code}</span></div>
@@ -271,7 +293,7 @@ const App: React.FC = () => {
         {/* Revealed name parts - prominently displayed (always show if last name exists) */}
         {game.baby_last_name && (
           <div className="w-full bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl p-4 text-center shadow-lg">
-            <div className="text-sm text-emerald-700 font-medium mb-3">
+            <div className="text-lg text-emerald-700 font-medium mb-3">
               ✅ <strong>Progress:</strong>
             </div>
             <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
@@ -312,6 +334,14 @@ const App: React.FC = () => {
           </div>
         )}
         
+        {/* Incorrect Guesses Counter */}
+        <div className="w-full flex justify-center">
+          <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl px-5 py-3 text-base font-body font-medium text-gray-800 shadow-sm">
+            <span className="text-gray-600">Incorrect Guesses:</span>
+            <span className="font-bold text-xl text-red-600 bg-red-100 px-3 py-1 rounded-lg">{incorrectGuesses}</span>
+          </div>
+        </div>
+        
         {/* Game Instructions */}
         <div className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
           <div className="text-sm text-blue-800 font-medium">
@@ -337,31 +367,7 @@ const App: React.FC = () => {
           formatGuess={formatGuess}
         />
         
-        {/* Partial match feedback - only show when not won */}
-        {partialMatchFeedback && gameStatus !== 'won' && (
-          <div className="w-full flex justify-center mt-4">
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-lg max-w-sm text-center">
-              <div className="text-3xl mb-3">🎯</div>
-              <div className="text-yellow-800 font-medium text-base leading-relaxed whitespace-pre-line">{partialMatchFeedback}</div>
-            </div>
-          </div>
-        )}
         
-        {/* Success message - only show when won */}
-        {gameStatus === 'won' && !showSuccessModal && (
-          <div className="w-full flex justify-center mt-4">
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-6 shadow-lg max-w-sm text-center">
-              <div className="text-4xl mb-3">🎉</div>
-              <div className="text-xl font-bold text-green-800 mb-2">Perfect!</div>
-              <div className="text-green-700 font-medium">
-                The baby's name is
-              </div>
-              <div className="text-2xl font-bold text-green-900 mt-2">
-                {[game.baby_first_name, game.baby_middle_name, game.baby_last_name].filter(Boolean).join(' ')}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
       {showSuccessModal && (
         <GameSuccess

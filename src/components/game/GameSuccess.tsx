@@ -47,11 +47,14 @@ const GameSuccess: React.FC<GameSuccessProps> = ({
           Congratulations!
         </div>
         
-        <div className="flex justify-center">
-          <div className="bg-black/10 rounded-lg p-2 inline-block">
-            <span className="text-lg sm:text-xl font-body text-white/90 mb-2" style={{fontWeight: 400, lineHeight: 1.4, textShadow: '0 1px 2px rgba(0,0,0,0.1)'}}>
-              You guessed <span className='font-semibold bg-white/30 text-white px-2 py-1 rounded'>{babyName}</span> correctly!
-            </span>
+        <div className="flex flex-col items-center justify-center mb-4">
+          <div className="text-base sm:text-lg font-body text-white/90 mb-3" style={{fontWeight: 400, lineHeight: 1.4, textShadow: '0 1px 2px rgba(0,0,0,0.1)'}}>
+            You guessed it correctly!
+          </div>
+          <div className="bg-white/20 rounded-xl p-4 border-2 border-white/30 shadow-lg">
+            <div className="text-3xl sm:text-4xl font-heading font-bold text-white text-center" style={{fontWeight: 800, letterSpacing: '-0.02em', textShadow: '0 2px 4px rgba(0,0,0,0.2)'}}>
+              {babyName}
+            </div>
           </div>
         </div>
         
