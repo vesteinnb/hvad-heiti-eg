@@ -4,9 +4,10 @@ import { useAuth } from '../../hooks';
 interface LoginFormProps {
   onSuccess: () => void;
   onShowSignUp: () => void;
+  onShowPasswordReset?: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onShowSignUp }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onShowSignUp, onShowPasswordReset }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { signIn, loading, error, clearError } = useAuth();
@@ -63,10 +64,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onShowSignUp }) => {
       
       {error && <div className="w-full text-center text-error font-medium animate-shake">{error}</div>}
       
-      <div className="w-full text-center mt-2">
+      <div className="w-full text-center mt-2 space-y-2">
+        {onShowPasswordReset && (
+          <button
+            type="button"
+            className="block w-full text-primary underline font-medium hover:text-primary/80 transition-all"
+            onClick={onShowPasswordReset}
+          >
+            Forgot your password?
+          </button>
+        )}
         <button
           type="button"
-          className="text-primary underline font-medium hover:text-primary/80 transition-all"
+          className="block w-full text-primary underline font-medium hover:text-primary/80 transition-all"
           onClick={onShowSignUp}
         >
           Don't have an account? Sign up

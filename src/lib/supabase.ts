@@ -382,23 +382,29 @@ export class AuthAPI {
     return data
   }
 
-  // Sign in with Google
-  static async signInWithGoogle() {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
-
-    if (error) throw error
-    return data
-  }
 
   // Sign out
   static async signOut() {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+  }
+
+  // Reset password - send reset email
+  static async resetPassword(email: string) {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/parent`
+    })
+    if (error) throw error
+    return data
+  }
+
+  // Update password (called after reset)
+  static async updatePassword(newPassword: string) {
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword
+    })
+    if (error) throw error
+    return data
   }
 
   // Get current authenticated user
