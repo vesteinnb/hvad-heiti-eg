@@ -33,12 +33,20 @@ This is a **baby name guessing game** where parents create games and players joi
 ```
 src/
 ├── components/          # Main game components
-│   ├── ui/             # Reusable UI components (Button, Input, Modal, etc.)
-│   └── [GameHeader, Timer, etc.]
+│   ├── auth/           # Authentication components (LoginForm, SignUpForm, PasswordResetForm)
+│   ├── game/           # Game-specific components (GameTimer, ClueReveal, GuessInput, etc.)
+│   ├── forms/          # Form components (GameCreationForm, ClueEditor)
+│   ├── shared/         # Shared utilities (QRCodeDisplay, LoadingSpinner, ErrorBoundary)
+│   └── ui/             # Reusable UI components (Button, Input, Modal, etc.)
+├── hooks/              # Custom React hooks
+│   ├── usePasswordReset.ts  # Password reset functionality
+│   └── [other hooks]   # Game state, auth state, form validation hooks
 ├── lib/
 │   └── supabase.ts     # API layer with GameAPI and AuthAPI classes
 ├── types/
 │   └── database.ts     # TypeScript types for Supabase schema
+├── utils/
+│   └── nameGuessing.ts # Sophisticated name matching logic
 └── [Page components]   # App.tsx, LandingPage.tsx, etc.
 ```
 
@@ -52,25 +60,36 @@ src/
 
 ### API Layer (src/lib/supabase.ts)
 - **GameAPI** - Game CRUD, player management, guess submission
-- **AuthAPI** - Email/password and Google OAuth authentication
+- **AuthAPI** - Email/password authentication with password reset (Google OAuth removed)
 - Real-time subscriptions for live game updates
+
+### Name Guessing System (src/utils/nameGuessing.ts)
+Sophisticated partial name matching system that handles:
+- **Full name matches** - Complete first + middle name recognition
+- **Individual part matches** - Separate first name, middle name recognition
+- **Persistent progress tracking** - Maintains guessed parts across multiple attempts
+- **Smart feedback** - Contextual messages based on what parts were guessed
+- **Last name handling** - Always visible from start, not required for winning
 
 ### Component Architecture Notes
 ✅ **Refactoring Progress**: Completed Phase 1.2 from `helpers/Refactor.md`
 
 **Implemented Feature Components:**
-- **Auth Components** (`src/components/auth/`): LoginForm, SignUpForm, GoogleAuthButton
+- **Auth Components** (`src/components/auth/`): LoginForm, SignUpForm, PasswordResetForm, PasswordUpdateForm
 - **Game Components** (`src/components/game/`): GameCard, GameList, GameStats, GameTimer, ClueReveal, GuessInput, GameSuccess  
 - **Forms Components** (`src/components/forms/`): GameCreationForm, ClueEditor
 - **Shared Components** (`src/components/shared/`): QRCodeDisplay, LoadingSpinner, ErrorBoundary
+- **Custom Hooks** (`src/hooks/`): usePasswordReset for auth state management
 
 **Integration Complete:**
 - `ParentAuthPage.tsx` now uses modular auth components (reduced from 400+ to ~160 lines)
 - `CreateGamePage.tsx` now uses GameCreationForm component (reduced from 460+ to ~40 lines)
 - `App.tsx` now uses GameTimer, ClueReveal, GuessInput, and GameSuccess components
+- **Major UI/UX Overhaul**: Professional baby-themed design with enhanced accessibility
+- **Enhanced Name Guessing**: Sophisticated partial matching with persistent progress tracking
+- **Authentication Streamlined**: Google OAuth removed, password reset functionality added
 
 **Remaining Opportunities:**
-- Custom hooks for auth state management
 - Custom hooks for game state management  
 - Custom hooks for form validation
 - Service layer separation (as outlined in Phase 3 of refactoring plan)
@@ -85,3 +104,20 @@ Requires Supabase configuration:
 - Game codes are auto-generated via database function
 - Real-time features use Supabase channels for live updates
 - Mobile-responsive design with safe-area-inset handling
+
+### Recent Major Updates
+- **Google OAuth Removal**: Simplified authentication to email/password only with comprehensive password reset flow
+- **404 Bug Fix**: Added `vercel.json` configuration to handle client-side routing for direct game URL access
+- **Enhanced Name Guessing**: Implemented sophisticated partial name matching with first/middle/last name support
+- **UI/UX Overhaul**: Professional baby-themed design with improved accessibility and visual hierarchy
+- **Progress Visibility**: Prominent display of guessed name parts below the timer
+- **Last Name Simplification**: Always visible from start, not required for winning
+
+### Key Files Added/Modified
+- `vercel.json` - Client-side routing configuration
+- `src/utils/nameGuessing.ts` - Sophisticated name matching logic
+- `src/components/auth/PasswordResetForm.tsx` - Password reset request form
+- `src/components/auth/PasswordUpdateForm.tsx` - Password update form
+- `src/hooks/usePasswordReset.ts` - Password reset state management
+- `src/lib/supabase.ts` - Removed Google OAuth, added password reset methods
+- `src/App.tsx` - Enhanced UI/UX with persistent progress tracking
