@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthAPI } from './lib/supabase';
+import { supabase, AuthAPI } from './lib/supabase';
 
 const AuthCallback: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -10,24 +10,37 @@ const AuthCallback: React.FC = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Wait a bit for the auth state to settle
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // First, handle the auth callback from the URL hash/fragment
+        const { data: authData, error: authError } = await supabase.auth.getSession();
         
-        // Get the current user
-        const user = await AuthAPI.getCurrentUser();
-        
-        if (user) {
-          // Try to get or create parent profile
-          const parent = await AuthAPI.getCurrentParent();
+        if (authError) {
+          console.error('Session error:', authError);
+          throw authError;
+        }
+
+        // Check if we have a session
+        if (authData.session?.user) {
+          console.log('User authenticated:', authData.session.user.email);
           
-          if (parent) {
-            // Redirect to parent dashboard
-            navigate('/parent');
-          } else {
-            setError('Failed to create user profile');
+          // Try to get or create parent profile
+          try {
+            const parent = await AuthAPI.getCurrentParent();
+            
+            if (parent) {
+              console.log('Parent profile found:', parent.username);
+              // Redirect to parent dashboard
+              navigate('/parent', { replace: true });
+            } else {
+              console.log('No parent profile found, creation may have failed');
+              setError('Failed to create user profile. Please try signing in again.');
+            }
+          } catch (profileError) {
+            console.error('Profile error:', profileError);
+            setError('Failed to access user profile. Please try again.');
           }
         } else {
-          setError('Authentication failed - no user found');
+          console.log('No session found');
+          setError('Authentication failed - no user session found. Please try again.');
         }
       } catch (err: any) {
         console.error('Auth callback error:', err);
@@ -37,7 +50,10 @@ const AuthCallback: React.FC = () => {
       }
     };
 
-    handleAuthCallback();
+    // Add a small delay to ensure the hash fragment is processed
+    const timer = setTimeout(handleAuthCallback, 500);
+    
+    return () => clearTimeout(timer);
   }, [navigate]);
 
   if (loading) {

@@ -26,7 +26,7 @@ const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ onSuccess, onError 
       type="button"
       onClick={handleGoogleLogin}
       disabled={loading}
-      className="w-full py-3 px-6 rounded-xl font-heading font-semibold text-base transition-all duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 bg-white text-neutral-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3"
+      className="w-full sm:w-auto sm:min-w-[280px] py-3 px-6 rounded-xl font-heading font-semibold text-base transition-all duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 bg-white text-neutral-700 border border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3"
     >
       {loading ? (
         <span className="inline-block w-5 h-5 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin"></span>
