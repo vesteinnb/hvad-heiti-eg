@@ -28,7 +28,7 @@ const ClueReveal: React.FC<ClueRevealProps> = ({ clues, cluesRevealed, maxClues,
           style={{fontWeight: 600}}
           aria-disabled={isDisabled}
         >
-          {isDisabled ? 'No More Clues' : 'Show Next Clue'}
+          {isDisabled ? 'No More Clues' : 'Next Clue'}
         </button>
       </div>
       
