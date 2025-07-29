@@ -54,7 +54,7 @@ const GuessInput: React.FC<GuessInputProps> = ({
         value={guess}
         onChange={e => setGuess(e.target.value)}
         placeholder="Type your guess (e.g. Emma or Emma Grace Smith)"
-        className={`w-full min-h-[44px] rounded-xl border-2 transition-all duration-200 py-4 px-6 text-base sm:text-lg font-body text-neutral-800 placeholder-neutral-500 bg-white/90 focus:outline-none focus:ring-2 focus:ring-primary/80 focus:ring-offset-2 focus:border-primary/60 disabled:bg-neutral-100 disabled:cursor-not-allowed ${inputError ? 'border-error' : inputPartial ? 'border-yellow-400' : 'border-gray-300'}`}
+        className={`w-full min-h-[44px] rounded-xl border-2 transition-all duration-200 py-4 px-6 text-base sm:text-lg font-body text-gray-900 placeholder-gray-500 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${inputError ? 'border-red-400 bg-red-50' : inputPartial ? 'border-yellow-400 bg-yellow-50' : 'border-gray-300'}`}
         autoFocus
         disabled={disabled || loading}
         style={{fontWeight: 400, lineHeight: 1.5}}
@@ -65,10 +65,10 @@ const GuessInput: React.FC<GuessInputProps> = ({
       
       <button
         type="submit"
-        className={`w-full min-h-[44px] rounded-xl font-heading font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-primary/80 focus:ring-offset-2 py-3 px-6 hover:scale-105 active:scale-100 flex items-center justify-center gap-2 transform
+        className={`w-full min-h-[44px] rounded-xl font-heading font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 py-3 px-6 hover:scale-105 active:scale-100 flex items-center justify-center gap-2 transform
           ${disabled || loading
             ? 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-75 cursor-not-allowed text-white'
-            : 'bg-gradient-to-r from-primary to-primary/80 text-white hover:bg-gradient-to-r hover:from-primary/90 hover:to-primary/70'}
+            : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'}
         `}
         disabled={disabled || loading}
         style={{fontWeight: 600, textShadow: !disabled && !loading ? '0 1px 2px rgba(0,0,0,0.12)' : undefined}}
@@ -82,9 +82,9 @@ const GuessInput: React.FC<GuessInputProps> = ({
       </button>
       
       <div className="w-full flex justify-center">
-        <div className="inline-flex items-center gap-2 bg-neutral-50 border border-gray-200 rounded-lg px-4 py-2 text-base sm:text-lg font-body font-medium text-neutral-800 shadow-sm min-h-[44px]">
-          <span className="font-bold">Incorrect Guesses:</span>
-          <span className="font-mono text-lg">{incorrectGuesses}</span>
+        <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl px-5 py-3 text-base font-body font-medium text-gray-800 shadow-sm">
+          <span className="text-gray-600">Incorrect Guesses:</span>
+          <span className="font-bold text-xl text-red-600 bg-red-100 px-3 py-1 rounded-lg">{incorrectGuesses}</span>
         </div>
       </div>
       
@@ -100,13 +100,19 @@ const GuessInput: React.FC<GuessInputProps> = ({
       
       <div role="status" aria-live="polite" className="w-full">
         {feedback === 'success' && (
-          <div className="w-full text-center mt-2 text-secondary font-semibold animate-fade-in font-body" style={{fontWeight: 600}}>Correct! 🎉</div>
+          <div className="w-full text-center mt-3 p-3 bg-green-100 border border-green-300 rounded-xl text-green-800 font-semibold animate-fade-in font-body">
+            🎉 Correct! You won!
+          </div>
         )}
         {feedback === 'error' && (
-          <div className="w-full text-center mt-2 text-error font-semibold animate-shake font-body" style={{fontWeight: 600}}>That's not correct. Try again!</div>
+          <div className="w-full text-center mt-3 p-3 bg-red-100 border border-red-300 rounded-xl text-red-800 font-semibold animate-shake font-body">
+            ❌ Not quite right. Try again!
+          </div>
         )}
         {feedback === 'partial' && (
-          <div className="w-full text-center mt-2 text-yellow-700 font-semibold animate-fade-in font-body" style={{fontWeight: 600}}>Partial match! Keep going! ✨</div>
+          <div className="w-full text-center mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded-xl text-yellow-800 font-semibold animate-fade-in font-body">
+            ✨ You're on the right track!
+          </div>
         )}
       </div>
       

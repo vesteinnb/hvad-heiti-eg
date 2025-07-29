@@ -213,14 +213,25 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-neutral-50 flex flex-col items-center px-6 transition-all duration-200${showSuccessModal ? '' : ''}`} style={{paddingTop: 'env(safe-area-inset-top, 0px)'}}>
-      <div className="w-full max-w-lg space-y-4">
+    <div className={`min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex flex-col items-center px-4 py-6 transition-all duration-200${showSuccessModal ? '' : ''}`} style={{paddingTop: 'env(safe-area-inset-top, 0px)'}}>
+      <div className="w-full max-w-lg space-y-6">
         <GameHeader />
-        <div className="w-full flex justify-between items-center text-sm text-neutral-500 font-body mb-1 pr-1">
-          <div>Player: <span className="font-semibold text-primary ml-1">{username}</span></div>
-          <div>Game: <span className="font-mono text-primary">{game.game_code}</span></div>
+        <div className="w-full flex justify-between items-center text-sm font-body bg-white/60 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/40">
+          <div className="text-gray-700">Player: <span className="font-bold text-purple-700">{username}</span></div>
+          <div className="text-gray-700">Game: <span className="font-mono font-bold text-purple-700">{game.game_code}</span></div>
         </div>
         <GameTimer currentTime={timer} />
+        
+        {/* Game Instructions */}
+        <div className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
+          <div className="text-sm text-blue-800 font-medium">
+            🎯 <strong>Goal:</strong> Guess the complete baby name using the clues below
+          </div>
+          <div className="text-xs text-blue-600 mt-1">
+            You can guess individual parts (first name) or the full name at once
+          </div>
+        </div>
+        
         <ClueReveal
           clues={game.game_clues.map(c => c.clue_text)}
           cluesRevealed={player?.clues_revealed || 0}
@@ -236,36 +247,34 @@ const App: React.FC = () => {
           formatGuess={formatGuess}
         />
         
-        {/* Revealed name parts display */}
-        {revealedNameParts && (
-          <div className="w-full flex justify-center mt-2">
-            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 text-lg font-semibold text-blue-700 shadow-sm">
-              <span className="text-2xl">👶</span>
-              <span>
-                Revealed: <span className="font-bold text-blue-800">{revealedNameParts}</span>
-              </span>
+        {/* Partial match feedback - only show when not won */}
+        {partialMatchFeedback && gameStatus !== 'won' && (
+          <div className="w-full flex justify-center mt-4">
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-lg max-w-sm text-center">
+              <div className="text-3xl mb-3">🎯</div>
+              <div className="text-yellow-800 font-medium text-base leading-relaxed whitespace-pre-line">{partialMatchFeedback}</div>
+              {revealedNameParts && (
+                <div className="mt-4 p-3 bg-yellow-100 rounded-xl border border-yellow-200">
+                  <div className="text-xs text-yellow-700 font-medium uppercase tracking-wide mb-1">Revealed so far:</div>
+                  <div className="text-lg font-bold text-yellow-900">{revealedNameParts}</div>
+                </div>
+              )}
             </div>
           </div>
         )}
         
-        {/* Partial match feedback */}
-        {partialMatchFeedback && (
-          <div className="w-full flex justify-center mt-2">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800 shadow-sm max-w-md text-center">
-              <div className="whitespace-pre-line">{partialMatchFeedback}</div>
-            </div>
-          </div>
-        )}
-        
-        {(gameStatus === 'won' || showSuccessModal) && (
-          <div className="w-full flex justify-center mt-2">
-            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg p-3 text-lg font-semibold text-green-700 shadow-sm">
-              <span className="text-2xl">✅</span>
-              <span>
-                Correct! The baby's name is <span className="font-bold text-green-800">
-                  {[game.baby_first_name, game.baby_middle_name, game.baby_last_name].filter(Boolean).join(' ')}
-                </span>
-              </span>
+        {/* Success message - only show when won */}
+        {gameStatus === 'won' && !showSuccessModal && (
+          <div className="w-full flex justify-center mt-4">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-6 shadow-lg max-w-sm text-center">
+              <div className="text-4xl mb-3">🎉</div>
+              <div className="text-xl font-bold text-green-800 mb-2">Perfect!</div>
+              <div className="text-green-700 font-medium">
+                The baby's name is
+              </div>
+              <div className="text-2xl font-bold text-green-900 mt-2">
+                {[game.baby_first_name, game.baby_middle_name, game.baby_last_name].filter(Boolean).join(' ')}
+              </div>
             </div>
           </div>
         )}
