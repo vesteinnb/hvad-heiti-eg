@@ -70,7 +70,7 @@ const LandingPage: React.FC = () => {
             />
             <button
               type="submit"
-              className="w-full py-3 px-6 rounded-xl font-heading font-semibold text-base transition-all duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-secondary focus:ring-offset-2 bg-gradient-to-r from-secondary to-accent text-neutral-700 hover:scale-105 active:scale-100"
+              className="w-full py-3 px-6 rounded-xl font-heading font-semibold text-base transition-all duration-200 shadow-md hover:shadow-lg focus:ring-2 focus:ring-secondary focus:ring-offset-2 bg-gradient-to-r from-secondary to-accent text-black hover:scale-105 active:scale-100"
               aria-label="Join Game"
             >
               Join Game

@@ -43,7 +43,7 @@ const GuessInput: React.FC<GuessInputProps> = ({
   const inputPartial = feedback === 'partial';
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md flex flex-col items-center gap-4 p-4 font-body" aria-label="Guess the baby name form">
+    <form onSubmit={handleSubmit} className="w-full flex flex-col items-center gap-4 p-4 font-body" aria-label="Guess the baby name form">
       <label htmlFor="guess-input" className="sr-only">Enter your guess</label>
       <input
         ref={inputRef}
@@ -81,12 +81,6 @@ const GuessInput: React.FC<GuessInputProps> = ({
         Guess
       </button>
       
-      <div className="w-full flex justify-center">
-        <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl px-5 py-3 text-base font-body font-medium text-gray-800 shadow-sm">
-          <span className="text-gray-600">Incorrect Guesses:</span>
-          <span className="font-bold text-xl text-red-600 bg-red-100 px-3 py-1 rounded-lg">{incorrectGuesses}</span>
-        </div>
-      </div>
       
       {previousGuesses.length > 0 && (
         <div
@@ -112,6 +106,16 @@ const GuessInput: React.FC<GuessInputProps> = ({
         {feedback === 'partial' && (
           <div className="w-full text-center mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded-xl text-yellow-800 font-semibold animate-fade-in font-body">
             ✨ You're on the right track!
+          </div>
+        )}
+        {feedback === 'empty' && (
+          <div className="w-full text-center mt-3 p-3 bg-orange-100 border border-orange-300 rounded-xl text-orange-800 font-semibold animate-shake font-body">
+            ⚠️ Please enter a guess first!
+          </div>
+        )}
+        {feedback === 'duplicate' && (
+          <div className="w-full text-center mt-3 p-3 bg-blue-100 border border-blue-300 rounded-xl text-blue-800 font-semibold animate-shake font-body">
+            🔄 You already tried that! Try something else.
           </div>
         )}
       </div>

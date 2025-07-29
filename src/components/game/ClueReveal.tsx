@@ -11,7 +11,7 @@ const ClueReveal: React.FC<ClueRevealProps> = ({ clues, cluesRevealed, maxClues,
   const isDisabled = cluesRevealed >= maxClues;
   
   return (
-    <section className="w-full max-w-md flex flex-col items-center p-4">
+    <section className="w-full flex flex-col items-center p-4">
       <div className="mb-3 w-full flex justify-between items-center">
         <span className="text-lg sm:text-xl font-body font-medium text-neutral-700" style={{fontWeight: 500}}>
           Clues Available: {maxClues - cluesRevealed}
@@ -23,7 +23,7 @@ const ClueReveal: React.FC<ClueRevealProps> = ({ clues, cluesRevealed, maxClues,
           className={`ml-2 min-h-12 py-3 px-6 rounded-xl font-heading font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:ring-2 focus:ring-secondary focus:ring-offset-2 hover:scale-105 active:scale-100 transform
             ${isDisabled
               ? 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-75 cursor-not-allowed text-white'
-              : 'bg-gradient-to-r from-secondary to-accent text-neutral-700 hover:bg-gradient-to-r hover:from-secondary/90 hover:to-accent/80'}
+              : 'bg-gradient-to-r from-secondary to-accent text-black hover:bg-gradient-to-r hover:from-secondary/90 hover:to-accent/80'}
           `}
           style={{fontWeight: 600}}
           aria-disabled={isDisabled}
