@@ -35,7 +35,7 @@ const App: React.FC = () => {
   const [guessedParts, setGuessedParts] = useState({
     firstName: false,
     middleName: false,
-    lastName: false
+    lastName: true // Last name is always revealed from the start
   });
 
   // Handle game status changes
@@ -45,6 +45,13 @@ const App: React.FC = () => {
       console.warn('Game is not currently active');
     }
   }, [isActive, game]);
+
+  // Set initial revealed name parts when game loads (last name is always visible)
+  useEffect(() => {
+    if (game && game.baby_last_name) {
+      setRevealedNameParts(game.baby_last_name);
+    }
+  }, [game]);
 
   useEffect(() => {
     if (gameStatus === 'won') {
@@ -112,7 +119,17 @@ const App: React.FC = () => {
         player.clues_revealed
       );
       
-      if (nameResult.isFullMatch) {
+      // Check if user has now guessed all required parts (first name + middle name if it exists)
+      const newGuessedParts = {
+        firstName: guessedParts.firstName || nameResult.matchedParts.firstName,
+        middleName: guessedParts.middleName || nameResult.matchedParts.middleName,
+        lastName: true // Always true since last name is always visible
+      };
+      
+      const hasAllRequiredParts = newGuessedParts.firstName && 
+        (game.baby_middle_name ? newGuessedParts.middleName : true);
+
+      if (nameResult.isFullMatch || hasAllRequiredParts) {
         setGameStatus('won');
         setEndTime(Date.now());
         setFeedback('success');
@@ -120,7 +137,7 @@ const App: React.FC = () => {
         setGuessedParts({
           firstName: true,
           middleName: !!game.baby_middle_name,
-          lastName: !!game.baby_last_name
+          lastName: true // Always true since last name is always visible
         });
         stopTimer();
       } else if (nameResult.isPartialMatch) {
@@ -251,8 +268,8 @@ const App: React.FC = () => {
         </div>
         <GameTimer currentTime={timer} />
         
-        {/* Revealed name parts - prominently displayed */}
-        {(guessedParts.firstName || guessedParts.middleName || guessedParts.lastName) && (
+        {/* Revealed name parts - prominently displayed (always show if last name exists) */}
+        {game.baby_last_name && (
           <div className="w-full bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl p-4 text-center shadow-lg">
             <div className="text-sm text-emerald-700 font-medium mb-3">
               ✅ <strong>Progress:</strong>
@@ -298,10 +315,10 @@ const App: React.FC = () => {
         {/* Game Instructions */}
         <div className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
           <div className="text-sm text-blue-800 font-medium">
-            🎯 <strong>Goal:</strong> Guess the complete baby name using the clues below
+            🎯 <strong>Goal:</strong> Guess the first{game.baby_middle_name ? ' and middle' : ''} name{game.baby_middle_name ? 's' : ''} using the clues below
           </div>
           <div className="text-xs text-blue-600 mt-1">
-            You can guess individual parts (first name) or the full name at once
+            {game.baby_last_name ? 'The last name is already revealed! ' : ''}You can guess individual parts or the full name at once
           </div>
         </div>
         

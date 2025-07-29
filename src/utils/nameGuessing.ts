@@ -30,8 +30,11 @@ export const checkNameGuess = (
   
   const fullName = nameParts.join(' ').toLowerCase();
   
-  // Check for full match first
-  if (normalizedGuess === fullName) {
+  // Check for full match first (or just first+middle if last name exists)
+  const requiredName = middleName ? `${firstName} ${middleName}` : firstName;
+  const isCompleteGuess = normalizedGuess === fullName || normalizedGuess === requiredName.toLowerCase();
+  
+  if (isCompleteGuess) {
     return {
       isFullMatch: true,
       isPartialMatch: false,
@@ -45,14 +48,14 @@ export const checkNameGuess = (
     };
   }
   
-  // Check individual parts
+  // Check individual parts (excluding last name since it's always visible)
   const matchedParts = {
     firstName: normalizedGuess === normalizedFirstName,
     middleName: normalizedMiddleName ? normalizedGuess === normalizedMiddleName : false,
-    lastName: normalizedLastName ? normalizedGuess === normalizedLastName : false
+    lastName: false // Last name is always visible, so don't count as a match
   };
   
-  const hasAnyMatch = matchedParts.firstName || matchedParts.middleName || matchedParts.lastName;
+  const hasAnyMatch = matchedParts.firstName || matchedParts.middleName;
   
   if (!hasAnyMatch) {
     return {
@@ -69,12 +72,8 @@ export const checkNameGuess = (
     const revealedParts = [firstName];
     let feedback = `✅ Great! You got the first name: ${firstName}`;
     
-    if (middleName || lastName) {
-      const remainingParts = [];
-      if (middleName) remainingParts.push('middle name');
-      if (lastName) remainingParts.push('last name');
-      
-      feedback += `\n\n🤔 But there's more! You also need to guess the ${remainingParts.join(' and ')}.`;
+    if (middleName) {
+      feedback += `\n\n🤔 But there's more! You also need to guess the middle name.`;
     }
     
     return {
@@ -91,17 +90,7 @@ export const checkNameGuess = (
       isFullMatch: false,
       isPartialMatch: true,
       matchedParts,
-      feedback: `✅ You got the middle name: ${middleName}\n\n🤔 But you still need to guess the first name${lastName ? ' and last name' : ''} to win!`,
-      revealedName: ''
-    };
-  }
-  
-  if (matchedParts.lastName) {
-    return {
-      isFullMatch: false,
-      isPartialMatch: true,
-      matchedParts,
-      feedback: `✅ You got the last name: ${lastName}\n\n🤔 But you still need to guess the first name${middleName ? ' and middle name' : ''} to win!`,
+      feedback: `✅ You got the middle name: ${middleName}\n\n🤔 But you still need to guess the first name to win!`,
       revealedName: ''
     };
   }
