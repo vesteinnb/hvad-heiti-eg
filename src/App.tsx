@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import GameHeader from './components/GameHeader';
 import { GameTimer, ClueReveal, GuessInput, GameSuccess } from './components';
 import { useGame, usePlayer, useGameTimer, useGuesses } from './hooks';
+import { checkNameGuess } from './utils/nameGuessing';
 import type { GameWithClues, Player, PlayerGuess } from './types/database';
 
 const App: React.FC = () => {
@@ -29,6 +30,13 @@ const App: React.FC = () => {
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const [username, setUsername] = useState<string>('');
   const [hasStarted, setHasStarted] = useState(false);
+  const [revealedNameParts, setRevealedNameParts] = useState<string>('');
+  const [partialMatchFeedback, setPartialMatchFeedback] = useState<string>('');
+  const [guessedParts, setGuessedParts] = useState({
+    firstName: false,
+    middleName: false,
+    lastName: true // Last name is always revealed from the start
+  });
 
   // Handle game status changes
   useEffect(() => {
@@ -37,6 +45,13 @@ const App: React.FC = () => {
       console.warn('Game is not currently active');
     }
   }, [isActive, game]);
+
+  // Set initial revealed name parts when game loads (last name is always visible)
+  useEffect(() => {
+    if (game && game.baby_last_name) {
+      setRevealedNameParts(game.baby_last_name);
+    }
+  }, [game]);
 
   useEffect(() => {
     if (gameStatus === 'won') {
@@ -82,9 +97,14 @@ const App: React.FC = () => {
     if (gameStatus !== 'active' || !game || !player) return;
     
     const trimmed = guess.trim();
-    const lowerTrimmed = trimmed.toLowerCase();
-    const answer = game.baby_first_name.toLowerCase();
-    const isCorrect = lowerTrimmed === answer;
+    
+    // Use the new name guessing logic
+    const nameResult = checkNameGuess(
+      trimmed,
+      game.baby_first_name,
+      game.baby_middle_name,
+      game.baby_last_name
+    );
     
     try {
       const timeElapsed = Math.floor((Date.now() - (player.joined_at ? new Date(player.joined_at).getTime() : Date.now())) / 1000);
@@ -94,23 +114,66 @@ const App: React.FC = () => {
         player.id,
         game.id,
         trimmed,
-        isCorrect,
+        nameResult.isFullMatch,
         timeElapsed,
         player.clues_revealed
       );
       
-      if (isCorrect) {
+      // Check if user has now guessed all required parts (first name + middle name if it exists)
+      const newGuessedParts = {
+        firstName: guessedParts.firstName || nameResult.matchedParts.firstName,
+        middleName: guessedParts.middleName || nameResult.matchedParts.middleName,
+        lastName: true // Always true since last name is always visible
+      };
+      
+      const hasAllRequiredParts = newGuessedParts.firstName && 
+        (game.baby_middle_name ? newGuessedParts.middleName : true);
+
+      if (nameResult.isFullMatch || hasAllRequiredParts) {
         setGameStatus('won');
         setEndTime(Date.now());
         setFeedback('success');
+        setPartialMatchFeedback('');
+        setGuessedParts({
+          firstName: true,
+          middleName: !!game.baby_middle_name,
+          lastName: true // Always true since last name is always visible
+        });
         stopTimer();
+      } else if (nameResult.isPartialMatch) {
+        setFeedback('partial');
+        setPartialMatchFeedback(nameResult.feedback);
+        
+        // Update guessed parts based on what was matched
+        const newGuessedParts = {
+          firstName: guessedParts.firstName || nameResult.matchedParts.firstName,
+          middleName: guessedParts.middleName || nameResult.matchedParts.middleName,
+          lastName: guessedParts.lastName || nameResult.matchedParts.lastName
+        };
+        
+        setGuessedParts(newGuessedParts);
+        
+        // Update revealed name parts string for display
+        const revealedParts = [];
+        if (newGuessedParts.firstName) {
+          revealedParts.push(game.baby_first_name);
+        }
+        if (newGuessedParts.middleName && game.baby_middle_name) {
+          revealedParts.push(game.baby_middle_name);
+        }
+        if (newGuessedParts.lastName && game.baby_last_name) {
+          revealedParts.push(game.baby_last_name);
+        }
+        setRevealedNameParts(revealedParts.join(' '));
       } else {
         setFeedback('error');
+        setPartialMatchFeedback('');
       }
       
     } catch (error: any) {
       console.error('Error submitting guess:', error);
       setFeedback('error');
+      setPartialMatchFeedback('');
     }
   };
 
@@ -196,14 +259,69 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen bg-neutral-50 flex flex-col items-center px-6 transition-all duration-200${showSuccessModal ? '' : ''}`} style={{paddingTop: 'env(safe-area-inset-top, 0px)'}}>
-      <div className="w-full max-w-lg space-y-4">
+    <div className={`min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 flex flex-col items-center px-4 py-6 transition-all duration-200${showSuccessModal ? '' : ''}`} style={{paddingTop: 'env(safe-area-inset-top, 0px)'}}>
+      <div className="w-full max-w-lg space-y-6">
         <GameHeader />
-        <div className="w-full flex justify-between items-center text-sm text-neutral-500 font-body mb-1 pr-1">
-          <div>Player: <span className="font-semibold text-primary ml-1">{username}</span></div>
-          <div>Game: <span className="font-mono text-primary">{game.game_code}</span></div>
+        <div className="w-full flex justify-between items-center text-sm font-body bg-white/60 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/40">
+          <div className="text-gray-700">Player: <span className="font-bold text-purple-700">{username}</span></div>
+          <div className="text-gray-700">Game: <span className="font-mono font-bold text-purple-700">{game.game_code}</span></div>
         </div>
         <GameTimer currentTime={timer} />
+        
+        {/* Revealed name parts - prominently displayed (always show if last name exists) */}
+        {game.baby_last_name && (
+          <div className="w-full bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl p-4 text-center shadow-lg">
+            <div className="text-sm text-emerald-700 font-medium mb-3">
+              ✅ <strong>Progress:</strong>
+            </div>
+            <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
+              {/* First Name */}
+              <div className={`px-3 py-2 rounded-lg font-bold text-lg ${
+                guessedParts.firstName 
+                  ? 'bg-emerald-200 text-emerald-900' 
+                  : 'bg-gray-200 text-gray-500'
+              }`}>
+                {guessedParts.firstName ? game.baby_first_name : '?????'}
+              </div>
+              
+              {/* Middle Name */}
+              {game.baby_middle_name && (
+                <div className={`px-3 py-2 rounded-lg font-bold text-lg ${
+                  guessedParts.middleName 
+                    ? 'bg-emerald-200 text-emerald-900' 
+                    : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {guessedParts.middleName ? game.baby_middle_name : '?????'}
+                </div>
+              )}
+              
+              {/* Last Name */}
+              {game.baby_last_name && (
+                <div className={`px-3 py-2 rounded-lg font-bold text-lg ${
+                  guessedParts.lastName 
+                    ? 'bg-emerald-200 text-emerald-900' 
+                    : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {guessedParts.lastName ? game.baby_last_name : '?????'}
+                </div>
+              )}
+            </div>
+            <div className="text-xs text-emerald-600">
+              {game.baby_middle_name || game.baby_last_name ? 'Keep guessing to complete the full name!' : ''}
+            </div>
+          </div>
+        )}
+        
+        {/* Game Instructions */}
+        <div className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
+          <div className="text-sm text-blue-800 font-medium">
+            🎯 <strong>Goal:</strong> Guess the first{game.baby_middle_name ? ' and middle' : ''} name{game.baby_middle_name ? 's' : ''} using the clues below
+          </div>
+          <div className="text-xs text-blue-600 mt-1">
+            {game.baby_last_name ? 'The last name is already revealed! ' : ''}You can guess individual parts or the full name at once
+          </div>
+        </div>
+        
         <ClueReveal
           clues={game.game_clues.map(c => c.clue_text)}
           cluesRevealed={player?.clues_revealed || 0}
@@ -218,20 +336,36 @@ const App: React.FC = () => {
           previousGuesses={recentGuesses}
           formatGuess={formatGuess}
         />
-        {(gameStatus === 'won' || showSuccessModal) && (
-          <div className="w-full flex justify-center mt-2">
-            <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg p-3 text-lg font-semibold text-green-700 shadow-sm">
-              <span className="text-2xl">✅</span>
-              <span>
-                Correct! The answer is <span className="font-bold text-green-800">'{game.baby_first_name}'</span>
-              </span>
+        
+        {/* Partial match feedback - only show when not won */}
+        {partialMatchFeedback && gameStatus !== 'won' && (
+          <div className="w-full flex justify-center mt-4">
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-lg max-w-sm text-center">
+              <div className="text-3xl mb-3">🎯</div>
+              <div className="text-yellow-800 font-medium text-base leading-relaxed whitespace-pre-line">{partialMatchFeedback}</div>
+            </div>
+          </div>
+        )}
+        
+        {/* Success message - only show when won */}
+        {gameStatus === 'won' && !showSuccessModal && (
+          <div className="w-full flex justify-center mt-4">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-6 shadow-lg max-w-sm text-center">
+              <div className="text-4xl mb-3">🎉</div>
+              <div className="text-xl font-bold text-green-800 mb-2">Perfect!</div>
+              <div className="text-green-700 font-medium">
+                The baby's name is
+              </div>
+              <div className="text-2xl font-bold text-green-900 mt-2">
+                {[game.baby_first_name, game.baby_middle_name, game.baby_last_name].filter(Boolean).join(' ')}
+              </div>
             </div>
           </div>
         )}
       </div>
       {showSuccessModal && (
         <GameSuccess
-          babyName={game.baby_first_name}
+          babyName={[game.baby_first_name, game.baby_middle_name, game.baby_last_name].filter(Boolean).join(' ')}
           finalTime={finalTime}
           incorrectGuesses={incorrectGuesses}
           cluesRevealed={player?.clues_revealed || 0}
