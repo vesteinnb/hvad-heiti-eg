@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import AutocompleteInput from './AutocompleteInput';
 
 interface GuessInputProps {
   onGuess: (guess: string) => void;
@@ -27,37 +28,38 @@ const GuessInput: React.FC<GuessInputProps> = ({
     }
   }, [feedback]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!disabled && guess.trim()) {
+  const handleSubmit = (guessValue?: string) => {
+    const finalGuess = guessValue || guess;
+    if (!disabled && finalGuess.trim()) {
       setLoading(true);
       setTimeout(() => {
-        onGuess(guess);
+        onGuess(finalGuess);
         setGuess('');
         setLoading(false);
       }, 1000);
     }
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSubmit();
+  };
+
   const inputError = feedback === 'error';
   const inputPartial = feedback === 'partial';
 
   return (
-    <form onSubmit={handleSubmit} className="w-full flex flex-col items-center gap-4 p-4 font-body" aria-label="Guess the baby name form">
+    <form onSubmit={handleFormSubmit} className="w-full flex flex-col items-center gap-4 p-4 font-body" aria-label="Guess the baby name form">
       <label htmlFor="guess-input" className="sr-only">Enter your guess</label>
-      <input
-        ref={inputRef}
-        id="guess-input"
-        type="text"
-        inputMode="text"
-        autoComplete="off"
+      <AutocompleteInput
         value={guess}
-        onChange={e => setGuess(e.target.value)}
-        placeholder="Type your guess (e.g. Emma or Emma Grace Smith)"
-        className={`w-full min-h-[44px] rounded-xl border-2 transition-all duration-200 py-4 px-6 text-base sm:text-lg font-body text-gray-900 placeholder-gray-500 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${inputError ? 'border-red-400 bg-red-50' : inputPartial ? 'border-yellow-400 bg-yellow-50' : 'border-gray-300'}`}
-        autoFocus
+        onChange={setGuess}
+        onSubmit={handleSubmit}
+        placeholder="Type your guess (e.g. Ögmundur or Ölnir)"
         disabled={disabled || loading}
-        style={{fontWeight: 400, lineHeight: 1.5}}
+        loading={loading}
+        autoFocus
+        className={`w-full min-h-[44px] rounded-xl border-2 transition-all duration-200 py-4 px-6 text-base sm:text-lg font-body text-gray-900 placeholder-gray-500 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${inputError ? 'border-red-400 bg-red-50' : inputPartial ? 'border-yellow-400 bg-yellow-50' : 'border-gray-300'}`}
         aria-label="Guess the baby name"
         aria-invalid={inputError}
         aria-required="true"
@@ -81,16 +83,6 @@ const GuessInput: React.FC<GuessInputProps> = ({
         Guess
       </button>
       
-      
-      {previousGuesses.length > 0 && (
-        <div
-          className="w-full text-xs sm:text-sm text-neutral-700 mb-1 text-center overflow-x-auto whitespace-nowrap px-1 font-body scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent"
-          style={{ WebkitOverflowScrolling: 'touch', wordBreak: 'break-word', fontWeight: 400, lineHeight: 1.4, minHeight: 24 }}
-          aria-label="Previous guesses"
-        >
-          Previous guesses: {previousGuesses.map(formatGuess).join(', ')}
-        </div>
-      )}
       
       <div role="status" aria-live="polite" className="w-full">
         {feedback === 'success' && (
@@ -119,6 +111,27 @@ const GuessInput: React.FC<GuessInputProps> = ({
           </div>
         )}
       </div>
+      
+      {/* Previous guesses - now displayed as a numbered list below feedback */}
+      {previousGuesses.length > 0 && (
+        <div className="w-full mt-4">
+          <div className="bg-white/80 backdrop-blur-sm border border-gray-300 rounded-xl p-4 shadow-sm">
+            <h3 className="text-base font-semibold text-gray-800 mb-3 font-body">Previous Guesses:</h3>
+            <ol className="space-y-2">
+              {previousGuesses.map((guess, index) => (
+                <li key={index} className="flex items-start gap-3 text-sm font-body">
+                  <span className="inline-flex items-center justify-center w-6 h-6 bg-red-100 text-red-800 rounded-full text-xs font-bold flex-shrink-0 mt-0.5">
+                    {index + 1}
+                  </span>
+                  <span className="text-gray-700 font-medium break-all">
+                    {formatGuess(guess)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )}
       
       <style>{`
         @keyframes fadeIn {

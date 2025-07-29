@@ -16,3 +16,6 @@ export { useGameDeletion } from './useGameDeletion';
 // Form management hooks
 export { useFormValidation } from './useFormValidation';
 export { useGameCreation } from './useGameCreation';
+
+// UI utility hooks
+export { useAutocomplete } from './useAutocomplete';
