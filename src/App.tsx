@@ -222,6 +222,50 @@ const App: React.FC = () => {
         </div>
         <GameTimer currentTime={timer} />
         
+        {/* Revealed name parts - prominently displayed */}
+        {revealedNameParts && (
+          <div className="w-full bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl p-4 text-center shadow-lg">
+            <div className="text-sm text-emerald-700 font-medium mb-3">
+              ✅ <strong>Progress:</strong>
+            </div>
+            <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
+              {/* First Name */}
+              <div className={`px-3 py-2 rounded-lg font-bold text-lg ${
+                revealedNameParts.includes(game.baby_first_name) 
+                  ? 'bg-emerald-200 text-emerald-900' 
+                  : 'bg-gray-200 text-gray-500'
+              }`}>
+                {revealedNameParts.includes(game.baby_first_name) ? game.baby_first_name : '?????'}
+              </div>
+              
+              {/* Middle Name */}
+              {game.baby_middle_name && (
+                <div className={`px-3 py-2 rounded-lg font-bold text-lg ${
+                  revealedNameParts.includes(game.baby_middle_name) 
+                    ? 'bg-emerald-200 text-emerald-900' 
+                    : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {revealedNameParts.includes(game.baby_middle_name) ? game.baby_middle_name : '?????'}
+                </div>
+              )}
+              
+              {/* Last Name */}
+              {game.baby_last_name && (
+                <div className={`px-3 py-2 rounded-lg font-bold text-lg ${
+                  revealedNameParts.includes(game.baby_last_name) 
+                    ? 'bg-emerald-200 text-emerald-900' 
+                    : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {revealedNameParts.includes(game.baby_last_name) ? game.baby_last_name : '?????'}
+                </div>
+              )}
+            </div>
+            <div className="text-xs text-emerald-600">
+              {game.baby_middle_name || game.baby_last_name ? 'Keep guessing to complete the full name!' : ''}
+            </div>
+          </div>
+        )}
+        
         {/* Game Instructions */}
         <div className="w-full bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
           <div className="text-sm text-blue-800 font-medium">
@@ -253,12 +297,6 @@ const App: React.FC = () => {
             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-2xl p-6 shadow-lg max-w-sm text-center">
               <div className="text-3xl mb-3">🎯</div>
               <div className="text-yellow-800 font-medium text-base leading-relaxed whitespace-pre-line">{partialMatchFeedback}</div>
-              {revealedNameParts && (
-                <div className="mt-4 p-3 bg-yellow-100 rounded-xl border border-yellow-200">
-                  <div className="text-xs text-yellow-700 font-medium uppercase tracking-wide mb-1">Revealed so far:</div>
-                  <div className="text-lg font-bold text-yellow-900">{revealedNameParts}</div>
-                </div>
-              )}
             </div>
           </div>
         )}
