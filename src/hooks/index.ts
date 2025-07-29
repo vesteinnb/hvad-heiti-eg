@@ -1,6 +1,6 @@
 // Authentication hooks
 export { useAuth } from './useAuth';
-export { useGoogleAuth } from './useGoogleAuth';
+export { usePasswordReset } from './usePasswordReset';
 
 // Game management hooks
 export { useGame } from './useGame';

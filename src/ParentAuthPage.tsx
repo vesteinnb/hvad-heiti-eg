@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LoginForm, SignUpForm, GoogleAuthButton, GameList } from './components';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { LoginForm, SignUpForm, PasswordResetForm, PasswordUpdateForm, GameList } from './components';
 import { useAuth, useParentGames } from './hooks';
 import type { Parent, GameSummary } from './types/database';
 
 const ParentAuthPage: React.FC = () => {
   const [showSignUp, setShowSignUp] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  // Check if this is a password reset redirect
+  const isPasswordReset = searchParams.get('type') === 'recovery';
   
   // Use custom hooks
   const { user: parent, loading: authLoading } = useAuth();
@@ -19,6 +24,17 @@ const ParentAuthPage: React.FC = () => {
 
   const handleSignUpSuccess = () => {
     setShowSignUp(false);
+  };
+
+  const handlePasswordResetSuccess = () => {
+    // Password update successful, user should now be authenticated
+    // Clear URL params and let auth redirect to dashboard
+    navigate('/parent', { replace: true });
+  };
+
+  const resetForms = () => {
+    setShowSignUp(false);
+    setShowPasswordReset(false);
   };
 
   const { signOut } = useAuth();
@@ -43,23 +59,20 @@ const ParentAuthPage: React.FC = () => {
   if (!parent) {
     return (
       <main className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-4 py-8">
-        <GoogleAuthButton />
-        
-        <div className="w-full flex items-center my-2 max-w-sm">
-          <div className="flex-grow border-t border-gray-200"></div>
-          <span className="mx-3 text-neutral-400 font-body text-sm">or</span>
-          <div className="flex-grow border-t border-gray-200"></div>
-        </div>
-
-        {!showSignUp ? (
+        {isPasswordReset ? (
+          <PasswordUpdateForm onSuccess={handlePasswordResetSuccess} />
+        ) : showPasswordReset ? (
+          <PasswordResetForm onBackToLogin={() => setShowPasswordReset(false)} />
+        ) : !showSignUp ? (
           <LoginForm 
             onSuccess={handleLoginSuccess}
             onShowSignUp={() => setShowSignUp(true)}
+            onShowPasswordReset={() => setShowPasswordReset(true)}
           />
         ) : (
           <SignUpForm
             onSuccess={handleSignUpSuccess}
-            onShowLogin={() => setShowSignUp(false)}
+            onShowLogin={resetForms}
           />
         )}
       </main>
