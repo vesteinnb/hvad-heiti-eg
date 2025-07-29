@@ -40,6 +40,7 @@ const GuessInput: React.FC<GuessInputProps> = ({
   };
 
   const inputError = feedback === 'error';
+  const inputPartial = feedback === 'partial';
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md flex flex-col items-center gap-4 p-4 font-body" aria-label="Guess the baby name form">
@@ -52,8 +53,8 @@ const GuessInput: React.FC<GuessInputProps> = ({
         autoComplete="off"
         value={guess}
         onChange={e => setGuess(e.target.value)}
-        placeholder="Type your guess (e.g. Emma)"
-        className={`w-full min-h-[44px] rounded-xl border-2 transition-all duration-200 py-4 px-6 text-base sm:text-lg font-body text-neutral-800 placeholder-neutral-500 bg-white/90 focus:outline-none focus:ring-2 focus:ring-primary/80 focus:ring-offset-2 focus:border-primary/60 disabled:bg-neutral-100 disabled:cursor-not-allowed ${inputError ? 'border-error' : 'border-gray-300'}`}
+        placeholder="Type your guess (e.g. Emma or Emma Grace Smith)"
+        className={`w-full min-h-[44px] rounded-xl border-2 transition-all duration-200 py-4 px-6 text-base sm:text-lg font-body text-neutral-800 placeholder-neutral-500 bg-white/90 focus:outline-none focus:ring-2 focus:ring-primary/80 focus:ring-offset-2 focus:border-primary/60 disabled:bg-neutral-100 disabled:cursor-not-allowed ${inputError ? 'border-error' : inputPartial ? 'border-yellow-400' : 'border-gray-300'}`}
         autoFocus
         disabled={disabled || loading}
         style={{fontWeight: 400, lineHeight: 1.5}}
@@ -103,6 +104,9 @@ const GuessInput: React.FC<GuessInputProps> = ({
         )}
         {feedback === 'error' && (
           <div className="w-full text-center mt-2 text-error font-semibold animate-shake font-body" style={{fontWeight: 600}}>That's not correct. Try again!</div>
+        )}
+        {feedback === 'partial' && (
+          <div className="w-full text-center mt-2 text-yellow-700 font-semibold animate-fade-in font-body" style={{fontWeight: 600}}>Partial match! Keep going! ✨</div>
         )}
       </div>
       

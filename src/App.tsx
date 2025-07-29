@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import GameHeader from './components/GameHeader';
 import { GameTimer, ClueReveal, GuessInput, GameSuccess } from './components';
 import { useGame, usePlayer, useGameTimer, useGuesses } from './hooks';
+import { checkNameGuess } from './utils/nameGuessing';
 import type { GameWithClues, Player, PlayerGuess } from './types/database';
 
 const App: React.FC = () => {
@@ -29,6 +30,8 @@ const App: React.FC = () => {
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
   const [username, setUsername] = useState<string>('');
   const [hasStarted, setHasStarted] = useState(false);
+  const [revealedNameParts, setRevealedNameParts] = useState<string>('');
+  const [partialMatchFeedback, setPartialMatchFeedback] = useState<string>('');
 
   // Handle game status changes
   useEffect(() => {
@@ -82,9 +85,14 @@ const App: React.FC = () => {
     if (gameStatus !== 'active' || !game || !player) return;
     
     const trimmed = guess.trim();
-    const lowerTrimmed = trimmed.toLowerCase();
-    const answer = game.baby_first_name.toLowerCase();
-    const isCorrect = lowerTrimmed === answer;
+    
+    // Use the new name guessing logic
+    const nameResult = checkNameGuess(
+      trimmed,
+      game.baby_first_name,
+      game.baby_middle_name,
+      game.baby_last_name
+    );
     
     try {
       const timeElapsed = Math.floor((Date.now() - (player.joined_at ? new Date(player.joined_at).getTime() : Date.now())) / 1000);
@@ -94,23 +102,32 @@ const App: React.FC = () => {
         player.id,
         game.id,
         trimmed,
-        isCorrect,
+        nameResult.isFullMatch,
         timeElapsed,
         player.clues_revealed
       );
       
-      if (isCorrect) {
+      if (nameResult.isFullMatch) {
         setGameStatus('won');
         setEndTime(Date.now());
         setFeedback('success');
+        setPartialMatchFeedback('');
         stopTimer();
+      } else if (nameResult.isPartialMatch) {
+        setFeedback('partial');
+        setPartialMatchFeedback(nameResult.feedback);
+        if (nameResult.revealedName) {
+          setRevealedNameParts(nameResult.revealedName);
+        }
       } else {
         setFeedback('error');
+        setPartialMatchFeedback('');
       }
       
     } catch (error: any) {
       console.error('Error submitting guess:', error);
       setFeedback('error');
+      setPartialMatchFeedback('');
     }
   };
 
@@ -218,12 +235,36 @@ const App: React.FC = () => {
           previousGuesses={recentGuesses}
           formatGuess={formatGuess}
         />
+        
+        {/* Revealed name parts display */}
+        {revealedNameParts && (
+          <div className="w-full flex justify-center mt-2">
+            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 text-lg font-semibold text-blue-700 shadow-sm">
+              <span className="text-2xl">👶</span>
+              <span>
+                Revealed: <span className="font-bold text-blue-800">{revealedNameParts}</span>
+              </span>
+            </div>
+          </div>
+        )}
+        
+        {/* Partial match feedback */}
+        {partialMatchFeedback && (
+          <div className="w-full flex justify-center mt-2">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-800 shadow-sm max-w-md text-center">
+              <div className="whitespace-pre-line">{partialMatchFeedback}</div>
+            </div>
+          </div>
+        )}
+        
         {(gameStatus === 'won' || showSuccessModal) && (
           <div className="w-full flex justify-center mt-2">
             <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg p-3 text-lg font-semibold text-green-700 shadow-sm">
               <span className="text-2xl">✅</span>
               <span>
-                Correct! The answer is <span className="font-bold text-green-800">'{game.baby_first_name}'</span>
+                Correct! The baby's name is <span className="font-bold text-green-800">
+                  {[game.baby_first_name, game.baby_middle_name, game.baby_last_name].filter(Boolean).join(' ')}
+                </span>
               </span>
             </div>
           </div>
@@ -231,7 +272,7 @@ const App: React.FC = () => {
       </div>
       {showSuccessModal && (
         <GameSuccess
-          babyName={game.baby_first_name}
+          babyName={[game.baby_first_name, game.baby_middle_name, game.baby_last_name].filter(Boolean).join(' ')}
           finalTime={finalTime}
           incorrectGuesses={incorrectGuesses}
           cluesRevealed={player?.clues_revealed || 0}
