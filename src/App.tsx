@@ -32,6 +32,11 @@ const App: React.FC = () => {
   const [hasStarted, setHasStarted] = useState(false);
   const [revealedNameParts, setRevealedNameParts] = useState<string>('');
   const [partialMatchFeedback, setPartialMatchFeedback] = useState<string>('');
+  const [guessedParts, setGuessedParts] = useState({
+    firstName: false,
+    middleName: false,
+    lastName: false
+  });
 
   // Handle game status changes
   useEffect(() => {
@@ -112,13 +117,37 @@ const App: React.FC = () => {
         setEndTime(Date.now());
         setFeedback('success');
         setPartialMatchFeedback('');
+        setGuessedParts({
+          firstName: true,
+          middleName: !!game.baby_middle_name,
+          lastName: !!game.baby_last_name
+        });
         stopTimer();
       } else if (nameResult.isPartialMatch) {
         setFeedback('partial');
         setPartialMatchFeedback(nameResult.feedback);
-        if (nameResult.revealedName) {
-          setRevealedNameParts(nameResult.revealedName);
+        
+        // Update guessed parts based on what was matched
+        const newGuessedParts = {
+          firstName: guessedParts.firstName || nameResult.matchedParts.firstName,
+          middleName: guessedParts.middleName || nameResult.matchedParts.middleName,
+          lastName: guessedParts.lastName || nameResult.matchedParts.lastName
+        };
+        
+        setGuessedParts(newGuessedParts);
+        
+        // Update revealed name parts string for display
+        const revealedParts = [];
+        if (newGuessedParts.firstName) {
+          revealedParts.push(game.baby_first_name);
         }
+        if (newGuessedParts.middleName && game.baby_middle_name) {
+          revealedParts.push(game.baby_middle_name);
+        }
+        if (newGuessedParts.lastName && game.baby_last_name) {
+          revealedParts.push(game.baby_last_name);
+        }
+        setRevealedNameParts(revealedParts.join(' '));
       } else {
         setFeedback('error');
         setPartialMatchFeedback('');
@@ -223,7 +252,7 @@ const App: React.FC = () => {
         <GameTimer currentTime={timer} />
         
         {/* Revealed name parts - prominently displayed */}
-        {revealedNameParts && (
+        {(guessedParts.firstName || guessedParts.middleName || guessedParts.lastName) && (
           <div className="w-full bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-300 rounded-xl p-4 text-center shadow-lg">
             <div className="text-sm text-emerald-700 font-medium mb-3">
               ✅ <strong>Progress:</strong>
@@ -231,32 +260,32 @@ const App: React.FC = () => {
             <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
               {/* First Name */}
               <div className={`px-3 py-2 rounded-lg font-bold text-lg ${
-                revealedNameParts.includes(game.baby_first_name) 
+                guessedParts.firstName 
                   ? 'bg-emerald-200 text-emerald-900' 
                   : 'bg-gray-200 text-gray-500'
               }`}>
-                {revealedNameParts.includes(game.baby_first_name) ? game.baby_first_name : '?????'}
+                {guessedParts.firstName ? game.baby_first_name : '?????'}
               </div>
               
               {/* Middle Name */}
               {game.baby_middle_name && (
                 <div className={`px-3 py-2 rounded-lg font-bold text-lg ${
-                  revealedNameParts.includes(game.baby_middle_name) 
+                  guessedParts.middleName 
                     ? 'bg-emerald-200 text-emerald-900' 
                     : 'bg-gray-200 text-gray-500'
                 }`}>
-                  {revealedNameParts.includes(game.baby_middle_name) ? game.baby_middle_name : '?????'}
+                  {guessedParts.middleName ? game.baby_middle_name : '?????'}
                 </div>
               )}
               
               {/* Last Name */}
               {game.baby_last_name && (
                 <div className={`px-3 py-2 rounded-lg font-bold text-lg ${
-                  revealedNameParts.includes(game.baby_last_name) 
+                  guessedParts.lastName 
                     ? 'bg-emerald-200 text-emerald-900' 
                     : 'bg-gray-200 text-gray-500'
                 }`}>
-                  {revealedNameParts.includes(game.baby_last_name) ? game.baby_last_name : '?????'}
+                  {guessedParts.lastName ? game.baby_last_name : '?????'}
                 </div>
               )}
             </div>
